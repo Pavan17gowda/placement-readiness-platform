@@ -10,6 +10,7 @@ import Analyze from './pages/Analyze';
 import Results from './pages/Results';
 import History from './pages/History';
 import TestChecklist from './pages/TestChecklist';
+import Proof from './pages/Proof';
 import Ship from './pages/Ship';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Route path="results/:id" element={<Results />} />
           <Route path="history" element={<History />} />
           <Route path="test-checklist" element={<TestChecklist />} />
+          <Route path="proof" element={<Proof />} />
           <Route path="ship" element={<Ship />} />
         </Route>
       </Routes>

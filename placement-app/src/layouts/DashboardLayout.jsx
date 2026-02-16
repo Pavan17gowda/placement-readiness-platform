@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Code, FileText, BookOpen, User, Sparkles, History, ClipboardCheck, Rocket } from 'lucide-react';
+import { LayoutDashboard, Code, FileText, BookOpen, User, Sparkles, History, ClipboardCheck, Award, Rocket } from 'lucide-react';
 
 export default function DashboardLayout() {
   const navItems = [
@@ -11,6 +11,7 @@ export default function DashboardLayout() {
     { path: '/app/resources', label: 'Resources', icon: BookOpen },
     { path: '/app/profile', label: 'Profile', icon: User },
     { path: '/app/test-checklist', label: 'Test Checklist', icon: ClipboardCheck, divider: true },
+    { path: '/app/proof', label: 'Proof', icon: Award },
     { path: '/app/ship', label: 'Ship', icon: Rocket },
   ];
 
