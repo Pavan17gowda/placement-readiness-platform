@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAnalysisById, updateAnalysis } from '../utils/storage';
-import { CheckCircle2, ArrowLeft, Calendar, Lightbulb, Download, Copy, Check, AlertCircle } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, Calendar, Lightbulb, Download, Copy, Check, AlertCircle, Building2, Target, TrendingUp } from 'lucide-react';
 
 export default function Results() {
   const { id } = useParams();
@@ -227,6 +227,107 @@ ${generateQuestionsText()}
           </button>
         </div>
       </div>
+
+      {/* Company Intel Block */}
+      {analysis.company && analysis.companyIntel && (
+        <div className="bg-white p-8 rounded-lg shadow mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Building2 className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold text-gray-900">Company Intel</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div className="p-4 bg-indigo-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Company</p>
+              <p className="text-lg font-semibold text-gray-900">{analysis.company}</p>
+            </div>
+            <div className="p-4 bg-indigo-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Industry</p>
+              <p className="text-lg font-semibold text-gray-900">{analysis.companyIntel.industry}</p>
+            </div>
+            <div className="p-4 bg-indigo-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Estimated Size</p>
+              <p className="text-lg font-semibold text-gray-900">{analysis.companyIntel.companySize}</p>
+              <p className="text-xs text-gray-500 mt-1">{analysis.companyIntel.sizeCategory}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-start gap-3 mb-4">
+              <Target className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Typical Hiring Focus</h3>
+                <p className="text-primary font-medium mb-2">{analysis.companyIntel.hiringFocus.primary}</p>
+                <p className="text-gray-700 text-sm mb-3">{analysis.companyIntel.hiringFocus.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {analysis.companyIntel.hiringFocus.traits.map((trait, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-xs text-amber-800">
+              <span className="font-semibold">Demo Mode:</span> Company intel generated heuristically based on common patterns.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Round Mapping Timeline */}
+      {analysis.companyIntel && analysis.companyIntel.roundMapping && (
+        <div className="bg-white p-8 rounded-lg shadow mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <TrendingUp className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold text-gray-900">Interview Round Mapping</h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-6">
+            Based on {analysis.companyIntel.companySize} company profile and detected skills
+          </p>
+
+          <div className="relative">
+            {/* Vertical timeline line */}
+            <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gray-200"></div>
+
+            <div className="space-y-6">
+              {analysis.companyIntel.roundMapping.map((round, idx) => (
+                <div key={idx} className="relative flex gap-6">
+                  {/* Timeline dot */}
+                  <div className="relative z-10 flex-shrink-0">
+                    <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      {idx + 1}
+                    </div>
+                  </div>
+
+                  {/* Round content */}
+                  <div className="flex-1 pb-6">
+                    <div className="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{round.title}</h3>
+                        <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">
+                          {round.duration}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-3">{round.description}</p>
+                      <div className="flex items-start gap-2 p-3 bg-indigo-50 rounded border border-indigo-100">
+                        <Lightbulb className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-gray-700 mb-1">Why this round matters</p>
+                          <p className="text-xs text-gray-600">{round.why}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Key Skills Extracted - Interactive */}
       <div className="bg-white p-8 rounded-lg shadow mb-6">

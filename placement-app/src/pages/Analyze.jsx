@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { extractSkills, generateChecklist, generate7DayPlan, generateInterviewQuestions, calculateReadinessScore } from '../utils/skillExtractor';
+import { generateCompanyIntel } from '../utils/companyIntel';
 import { saveAnalysis } from '../utils/storage';
 
 export default function Analyze() {
@@ -29,6 +30,7 @@ export default function Analyze() {
         formData.role,
         extractedSkills
       );
+      const companyIntel = generateCompanyIntel(formData.company, formData.role, extractedSkills);
 
       const analysis = {
         company: formData.company,
@@ -38,7 +40,8 @@ export default function Analyze() {
         checklist,
         plan,
         questions,
-        readinessScore
+        readinessScore,
+        companyIntel
       };
 
       const saved = saveAnalysis(analysis);
