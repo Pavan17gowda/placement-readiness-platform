@@ -1,9 +1,11 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Code, FileText, BookOpen, User } from 'lucide-react';
+import { LayoutDashboard, Code, FileText, BookOpen, User, Sparkles, History } from 'lucide-react';
 
 export default function DashboardLayout() {
   const navItems = [
     { path: '/app', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/app/analyze', label: 'Analyze JD', icon: Sparkles },
+    { path: '/app/history', label: 'History', icon: History },
     { path: '/app/practice', label: 'Practice', icon: Code },
     { path: '/app/assessments', label: 'Assessments', icon: FileText },
     { path: '/app/resources', label: 'Resources', icon: BookOpen },
