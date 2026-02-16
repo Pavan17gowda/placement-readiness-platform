@@ -1,23 +1,136 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getAnalysisById } from '../utils/storage';
-import { CheckCircle2, ArrowLeft, Calendar, Lightbulb } from 'lucide-react';
+import { getAnalysisById, updateAnalysis } from '../utils/storage';
+import { CheckCircle2, ArrowLeft, Calendar, Lightbulb, Download, Copy, Check, AlertCircle } from 'lucide-react';
 
 export default function Results() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState(null);
+  const [skillConfidenceMap, setSkillConfidenceMap] = useState({});
+  const [liveScore, setLiveScore] = useState(0);
+  const [copiedItem, setCopiedItem] = useState(null);
 
   useEffect(() => {
     if (id) {
       const data = getAnalysisById(id);
       if (data) {
         setAnalysis(data);
+        setSkillConfidenceMap(data.skillConfidenceMap || {});
+        setLiveScore(data.liveReadinessScore || data.readinessScore);
       } else {
         navigate('/app/analyze');
       }
     }
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (analysis) {
+      // Calculate live score based on skill confidence
+      let score = analysis.readinessScore;
+      Object.values(skillConfidenceMap).forEach(confidence => {
+        if (confidence === 'know') score += 2;
+        if (confidence === 'practice') score -= 2;
+      });
+      const boundedScore = Math.max(0, Math.min(100, score));
+      setLiveScore(boundedScore);
+
+      // Save to localStorage
+      updateAnalysis(id, {
+        skillConfidenceMap,
+        liveReadinessScore: boundedScore
+      });
+    }
+  }, [skillConfidenceMap, analysis, id]);
+
+  const toggleSkillConfidence = (skill) => {
+    setSkillConfidenceMap(prev => {
+      const current = prev[skill] || 'practice';
+      return {
+        ...prev,
+        [skill]: current === 'practice' ? 'know' : 'practice'
+      };
+    });
+  };
+
+  const copyToClipboard = async (text, itemName) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedItem(itemName);
+      setTimeout(() => setCopiedItem(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const generate7DayPlanText = () => {
+    return analysis.plan.map((day, idx) => 
+      `${day.day}: ${day.title}\n${day.tasks.map(t => `  • ${t}`).join('\n')}`
+    ).join('\n\n');
+  };
+
+  const generateChecklistText = () => {
+    return Object.entries(analysis.checklist).map(([round, items]) =>
+      `${round}\n${items.map(item => `  ☐ ${item}`).join('\n')}`
+    ).join('\n\n');
+  };
+
+  const generateQuestionsText = () => {
+    return analysis.questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n\n');
+  };
+
+  const downloadAsText = () => {
+    const content = `
+PLACEMENT READINESS ANALYSIS
+${analysis.company} - ${analysis.role}
+Generated: ${new Date(analysis.createdAt).toLocaleString()}
+Readiness Score: ${liveScore}/100
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+KEY SKILLS EXTRACTED
+${Object.entries(analysis.extractedSkills).map(([cat, skills]) => 
+  `${cat}:\n  ${skills.join(', ')}`
+).join('\n\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROUND-WISE PREPARATION CHECKLIST
+${generateChecklistText()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7-DAY PREPARATION PLAN
+${generate7DayPlanText()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+10 LIKELY INTERVIEW QUESTIONS
+${generateQuestionsText()}
+    `.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${analysis.company}_${analysis.role}_prep_plan.txt`.replace(/\s+/g, '_');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getWeakSkills = () => {
+    const weak = [];
+    Object.entries(analysis.extractedSkills).forEach(([category, skills]) => {
+      skills.forEach(skill => {
+        if (skillConfidenceMap[skill] === 'practice' || !skillConfidenceMap[skill]) {
+          weak.push(skill);
+        }
+      });
+    });
+    return weak.slice(0, 3);
+  };
 
   if (!analysis) {
     return (
@@ -28,13 +141,14 @@ export default function Results() {
   }
 
   const circumference = 2 * Math.PI * 60;
-  const strokeDashoffset = circumference - (analysis.readinessScore / 100) * circumference;
+  const strokeDashoffset = circumference - (liveScore / 100) * circumference;
+  const weakSkills = getWeakSkills();
 
   return (
     <div className="max-w-6xl">
       <button
         onClick={() => navigate('/app/history')}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to History
@@ -70,33 +184,78 @@ export default function Results() {
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
+                  className="transition-all duration-500"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-gray-900">{analysis.readinessScore}</span>
-                <span className="text-xs text-gray-500">Score</span>
+                <span className="text-3xl font-bold text-gray-900">{liveScore}</span>
+                <span className="text-xs text-gray-500">Live Score</span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Export Buttons */}
+        <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => copyToClipboard(generate7DayPlanText(), '7day')}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+          >
+            {copiedItem === '7day' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            Copy 7-Day Plan
+          </button>
+          <button
+            onClick={() => copyToClipboard(generateChecklistText(), 'checklist')}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+          >
+            {copiedItem === 'checklist' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            Copy Round Checklist
+          </button>
+          <button
+            onClick={() => copyToClipboard(generateQuestionsText(), 'questions')}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+          >
+            {copiedItem === 'questions' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            Copy 10 Questions
+          </button>
+          <button
+            onClick={downloadAsText}
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            <Download className="w-4 h-4" />
+            Download as TXT
+          </button>
+        </div>
       </div>
 
-      {/* Key Skills Extracted */}
+      {/* Key Skills Extracted - Interactive */}
       <div className="bg-white p-8 rounded-lg shadow mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Key Skills Extracted</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Key Skills Extracted</h2>
+        <p className="text-sm text-gray-600 mb-4">Click skills to mark your confidence level</p>
         <div className="space-y-4">
           {Object.entries(analysis.extractedSkills).map(([category, skills]) => (
             <div key={category}>
               <h3 className="text-sm font-semibold text-gray-700 mb-2">{category}</h3>
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-indigo-50 text-primary rounded-full text-sm font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
+                {skills.map((skill, idx) => {
+                  const confidence = skillConfidenceMap[skill] || 'practice';
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleSkillConfidence(skill)}
+                      className={`px-3 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                        confidence === 'know'
+                          ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                          : 'bg-amber-50 text-amber-700 border-2 border-amber-300'
+                      }`}
+                    >
+                      {skill}
+                      <span className="ml-2 text-xs">
+                        {confidence === 'know' ? '✓ Know' : '⚠ Practice'}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -166,6 +325,29 @@ export default function Results() {
           ))}
         </div>
       </div>
+
+      {/* Action Next Box */}
+      {weakSkills.length > 0 && (
+        <div className="bg-indigo-50 border-2 border-primary p-8 rounded-lg shadow">
+          <div className="flex items-start gap-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Action Next</h2>
+              <p className="text-gray-700 mb-4">Focus on these areas to improve your readiness:</p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {weakSkills.map((skill, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+              <p className="text-lg font-semibold text-primary">
+                💡 Start Day 1 plan now.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -25,6 +25,17 @@ export function getAnalysisById(id) {
   return history.find(item => item.id === id);
 }
 
+export function updateAnalysis(id, updates) {
+  const history = getHistory();
+  const index = history.findIndex(item => item.id === id);
+  if (index !== -1) {
+    history[index] = { ...history[index], ...updates };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    return history[index];
+  }
+  return null;
+}
+
 export function deleteAnalysis(id) {
   const history = getHistory();
   const filtered = history.filter(item => item.id !== id);

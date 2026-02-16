@@ -73,7 +73,7 @@ export default function History() {
                   </h3>
                   <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full">
                     <span className="text-sm font-semibold text-primary">
-                      Score: {item.readinessScore}
+                      Score: {item.liveReadinessScore || item.readinessScore}
                     </span>
                   </div>
                 </div>
