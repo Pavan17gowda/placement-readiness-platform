@@ -9,6 +9,8 @@ import Profile from './pages/Profile';
 import Analyze from './pages/Analyze';
 import Results from './pages/Results';
 import History from './pages/History';
+import TestChecklist from './pages/TestChecklist';
+import Ship from './pages/Ship';
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
           <Route path="analyze" element={<Analyze />} />
           <Route path="results/:id" element={<Results />} />
           <Route path="history" element={<History />} />
+          <Route path="test-checklist" element={<TestChecklist />} />
+          <Route path="ship" element={<Ship />} />
         </Route>
       </Routes>
     </BrowserRouter>

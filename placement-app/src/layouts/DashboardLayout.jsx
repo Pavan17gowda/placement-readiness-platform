@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Code, FileText, BookOpen, User, Sparkles, History } from 'lucide-react';
+import { LayoutDashboard, Code, FileText, BookOpen, User, Sparkles, History, ClipboardCheck, Rocket } from 'lucide-react';
 
 export default function DashboardLayout() {
   const navItems = [
@@ -10,6 +10,8 @@ export default function DashboardLayout() {
     { path: '/app/assessments', label: 'Assessments', icon: FileText },
     { path: '/app/resources', label: 'Resources', icon: BookOpen },
     { path: '/app/profile', label: 'Profile', icon: User },
+    { path: '/app/test-checklist', label: 'Test Checklist', icon: ClipboardCheck, divider: true },
+    { path: '/app/ship', label: 'Ship', icon: Rocket },
   ];
 
   return (
@@ -21,21 +23,23 @@ export default function DashboardLayout() {
         </div>
         <nav className="px-4">
           {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/app'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-                  isActive
-                    ? 'bg-indigo-50 text-primary font-medium'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </NavLink>
+            <div key={item.path}>
+              {item.divider && <div className="my-2 border-t border-gray-200"></div>}
+              <NavLink
+                to={item.path}
+                end={item.path === '/app'}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+                    isActive
+                      ? 'bg-indigo-50 text-primary font-medium'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </NavLink>
+            </div>
           ))}
         </nav>
       </aside>
