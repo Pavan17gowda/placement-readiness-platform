@@ -6,13 +6,21 @@ import { Clock, Trash2, Eye } from 'lucide-react';
 export default function History() {
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     loadHistory();
   }, []);
 
   const loadHistory = () => {
-    setHistory(getHistory());
+    try {
+      const data = getHistory();
+      setHistory(data);
+      setLoadError(false);
+    } catch (error) {
+      console.error('Error loading history:', error);
+      setLoadError(true);
+    }
   };
 
   const handleDelete = (id, e) => {
@@ -31,6 +39,15 @@ export default function History() {
     return (
       <div>
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Analysis History</h2>
+        
+        {loadError && (
+          <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-6">
+            <p className="text-red-800 text-sm">
+              ⚠️ One saved entry couldn't be loaded. Create a new analysis.
+            </p>
+          </div>
+        )}
+        
         <div className="bg-white p-12 rounded-lg shadow text-center">
           <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No Analysis Yet</h3>
@@ -57,6 +74,14 @@ export default function History() {
           New Analysis
         </button>
       </div>
+
+      {loadError && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-6">
+          <p className="text-red-800 text-sm">
+            ⚠️ One saved entry couldn't be loaded. Create a new analysis.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-4">
         {history.map((item) => (

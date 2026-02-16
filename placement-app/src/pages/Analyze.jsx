@@ -13,9 +13,22 @@ export default function Analyze() {
     jdText: ''
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+  const handleJdChange = (e) => {
+    const text = e.target.value;
+    setFormData({ ...formData, jdText: text });
+    setShowWarning(text.length > 0 && text.length < 200);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    if (formData.jdText.length < 200) {
+      setShowWarning(true);
+      return;
+    }
+    
     setIsAnalyzing(true);
 
     // Simulate analysis delay for better UX
@@ -88,20 +101,33 @@ export default function Analyze() {
           </label>
           <textarea
             value={formData.jdText}
-            onChange={(e) => setFormData({ ...formData, jdText: e.target.value })}
+            onChange={handleJdChange}
             required
+            minLength={200}
             rows={12}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             placeholder="Paste the complete job description here..."
           />
-          <p className="text-sm text-gray-500 mt-2">
-            {formData.jdText.length} characters {formData.jdText.length > 800 && '✓ Detailed JD'}
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-sm text-gray-500">
+              {formData.jdText.length} characters {formData.jdText.length >= 200 && formData.jdText.length > 800 && '✓ Detailed JD'}
+            </p>
+            {formData.jdText.length >= 200 && formData.jdText.length <= 800 && (
+              <p className="text-sm text-amber-600">Add more details for better analysis</p>
+            )}
+          </div>
+          {showWarning && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                ⚠️ This JD is too short to analyze deeply. Paste full JD for better output.
+              </p>
+            </div>
+          )}
         </div>
 
         <button
           type="submit"
-          disabled={!formData.jdText || isAnalyzing}
+          disabled={!formData.jdText || formData.jdText.length < 200 || isAnalyzing}
           className="w-full bg-primary hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAnalyzing ? (

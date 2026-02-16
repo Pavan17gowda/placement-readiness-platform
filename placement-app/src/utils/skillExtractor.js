@@ -11,7 +11,15 @@ export const SKILL_CATEGORIES = {
 
 export function extractSkills(jdText) {
   const lowerText = jdText.toLowerCase();
-  const extracted = {};
+  const extracted = {
+    'Core CS': [],
+    'Languages': [],
+    'Web': [],
+    'Data': [],
+    'Cloud/DevOps': [],
+    'Testing': [],
+    'Other': []
+  };
   
   Object.keys(SKILL_CATEGORIES).forEach(category => {
     const found = SKILL_CATEGORIES[category].filter(skill => 
@@ -22,16 +30,25 @@ export function extractSkills(jdText) {
     }
   });
 
-  // If nothing found, return general stack
-  if (Object.keys(extracted).length === 0) {
-    extracted['General'] = ['Fresher Stack', 'Communication', 'Problem Solving'];
+  // If nothing found, populate Other with defaults
+  const hasAnySkills = Object.values(extracted).some(arr => arr.length > 0);
+  if (!hasAnySkills) {
+    extracted['Other'] = ['Communication', 'Problem solving', 'Basic coding', 'Projects'];
   }
+
+  // Remove empty categories
+  Object.keys(extracted).forEach(key => {
+    if (extracted[key].length === 0) {
+      delete extracted[key];
+    }
+  });
 
   return extracted;
 }
 
 export function generateChecklist(skills) {
   const hasSkill = (category) => skills[category] && skills[category].length > 0;
+  const isGenericProfile = hasSkill('Other');
   
   return {
     'Round 1: Aptitude / Basics': [
@@ -43,12 +60,12 @@ export function generateChecklist(skills) {
     ],
     'Round 2: DSA + Core CS': [
       hasSkill('Core CS') ? `Study ${skills['Core CS'].join(', ')} concepts` : 'Review core CS fundamentals',
-      'Practice array and string problems',
+      isGenericProfile ? 'Learn basic data structures (arrays, strings, lists)' : 'Practice array and string problems',
       'Master sorting and searching algorithms',
       'Understand time and space complexity',
       hasSkill('Core CS') && skills['Core CS'].includes('DBMS') ? 'Practice SQL queries and normalization' : 'Review data structures basics',
-      'Solve tree and graph problems',
-      'Practice dynamic programming questions'
+      isGenericProfile ? 'Practice simple coding problems' : 'Solve tree and graph problems',
+      isGenericProfile ? 'Learn basic algorithms' : 'Practice dynamic programming questions'
     ],
     'Round 3: Tech Interview': [
       hasSkill('Languages') ? `Prepare projects using ${skills['Languages'][0]}` : 'Prepare your best project',
@@ -56,7 +73,7 @@ export function generateChecklist(skills) {
       hasSkill('Data') ? `Practice database design with ${skills['Data'][0]}` : 'Understand database basics',
       'Prepare to explain your project architecture',
       hasSkill('Cloud/DevOps') ? `Study ${skills['Cloud/DevOps'].join(', ')} basics` : 'Learn deployment basics',
-      'Review system design fundamentals',
+      isGenericProfile ? 'Focus on explaining your learning journey' : 'Review system design fundamentals',
       'Practice explaining technical decisions'
     ],
     'Round 4: Managerial / HR': [
@@ -72,6 +89,7 @@ export function generateChecklist(skills) {
 
 export function generate7DayPlan(skills) {
   const hasSkill = (category) => skills[category] && skills[category].length > 0;
+  const isGenericProfile = hasSkill('Other');
   
   return [
     {
@@ -79,8 +97,8 @@ export function generate7DayPlan(skills) {
       title: 'Basics + Core CS',
       tasks: [
         hasSkill('Core CS') ? `Review ${skills['Core CS'].slice(0, 3).join(', ')}` : 'Review CS fundamentals',
-        'Practice basic coding problems',
-        'Revise OOP concepts',
+        isGenericProfile ? 'Learn basic programming concepts' : 'Practice basic coding problems',
+        isGenericProfile ? 'Study OOP basics' : 'Revise OOP concepts',
         hasSkill('Data') ? `Study ${skills['Data'][0]} basics` : 'Review database concepts'
       ]
     },
@@ -88,11 +106,11 @@ export function generate7DayPlan(skills) {
       day: 'Day 3-4',
       title: 'DSA + Coding Practice',
       tasks: [
-        'Solve 10 array/string problems',
-        'Practice tree and graph traversals',
-        'Review sorting algorithms',
+        isGenericProfile ? 'Solve 5 easy array problems' : 'Solve 10 array/string problems',
+        isGenericProfile ? 'Learn basic sorting' : 'Practice tree and graph traversals',
+        isGenericProfile ? 'Understand time complexity basics' : 'Review sorting algorithms',
         hasSkill('Languages') ? `Code in ${skills['Languages'][0]}` : 'Practice in your preferred language',
-        'Take a timed coding test'
+        isGenericProfile ? 'Practice on HackerRank/LeetCode easy' : 'Take a timed coding test'
       ]
     },
     {
@@ -110,10 +128,10 @@ export function generate7DayPlan(skills) {
       day: 'Day 6',
       title: 'Mock Interview Questions',
       tasks: [
-        'Practice 20 common interview questions',
+        isGenericProfile ? 'Practice 10 common interview questions' : 'Practice 20 common interview questions',
         hasSkill('Web') ? `Prepare ${skills['Web'][0]} specific questions` : 'Prepare tech-specific questions',
         'Record yourself answering questions',
-        'Practice whiteboard coding',
+        isGenericProfile ? 'Practice explaining your projects' : 'Practice whiteboard coding',
         'Review behavioral questions'
       ]
     },
@@ -124,7 +142,7 @@ export function generate7DayPlan(skills) {
         'Revise all key concepts',
         'Focus on your weakest topic',
         hasSkill('Testing') ? 'Review testing frameworks' : 'Review debugging techniques',
-        'Take a full mock interview',
+        isGenericProfile ? 'Practice explaining your learning journey' : 'Take a full mock interview',
         'Prepare questions for interviewer',
         'Get good rest before interview'
       ]
@@ -135,6 +153,22 @@ export function generate7DayPlan(skills) {
 export function generateInterviewQuestions(skills) {
   const questions = [];
   const hasSkill = (category) => skills[category] && skills[category].length > 0;
+  const isGenericProfile = hasSkill('Other');
+
+  // Generic profile questions
+  if (isGenericProfile) {
+    questions.push('Tell me about yourself and your background.');
+    questions.push('What programming languages are you comfortable with?');
+    questions.push('Describe a project you worked on and your role in it.');
+    questions.push('How do you approach learning new technologies?');
+    questions.push('What is your understanding of data structures?');
+    questions.push('Explain the difference between a class and an object.');
+    questions.push('How would you debug a program that is not working?');
+    questions.push('What motivates you to pursue a career in software development?');
+    questions.push('Describe a challenging problem you solved.');
+    questions.push('Where do you see yourself in 3 years?');
+    return questions;
+  }
 
   // Core CS questions
   if (hasSkill('Core CS')) {
